@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Czat</title>
+	<meta charset="utf-8" />
+    <link href="stylesheets/jquery.cssemoticons.css" media="screen" rel="stylesheet" type="text/css" />
+	<script src="https://code.jquery.com/jquery-1.11.3.js"></script>
+	<script src="javascripts/jquery.cssemoticons.min.js" type="text/javascript"></script>
+   
+    <script type="text/javascript">
+		$(document).ready(function(){
+            $('.spn').emoticonize();
+		})
+	</script>
+	<style>
+        #textBox{
+            border: 2px solid black;
+            width: 40%;
+            height: 50vh;
+            margin-bottom: 10px;
+            overflow: scroll;
+        }
+        .oneLine{
+            margin-left: 5%;
+            margin-right: 5%;
+            margin-bottom: 5px;
+            width: 90%;
+            text-align: left;
+            
+        }
+    </style>
+</head>
+<body>
+    <center>
+        <div id="textBox"></div>
+    </center>
+    <center>
+        <input type="text" id="send" />
+    </center>
+
+
+
+    <script>
+        var sendData = {};
+        var accColor;
+        var box = document.getElementById("textBox");
+        var send = document.getElementById("send");
+        var color = ["red", "orange", "green", "pink", "blue"];
+        var thisColor = Math.floor((Math.random() * 5));
+        
+        accColor = color[thisColor];
+
+        var time;
+        var now = new Date();
+        var hours = now.getHours();
+        var min = now.getMinutes();
+        if (hours < 10) hours = "0" + hours;
+        if (min < 10) min = "0" + min;
+        time = "[" + hours + ":" + min + "]";
+
+
+        var name = "";
+        
+        var person = prompt("Podaj swoja nazwe", "User");
+        for (var i = 0; i < person.split().length; i++){
+            name = person.split()[i];
+        }
+        
+
+
+        function poll() {
+            $.ajax({
+                method: "POST",
+                url: "ajaxlp.php",
+                data: {},
+                dataType: "json",
+                success: function (data) {
+                    //console.log("POLL");
+                    //console.log(data);
+                    
+						if(data[0].user != name || data[0].exist != accColor){
+							
+							var sp = document.createElement("div");
+							sp.setAttribute("class", "oneLine");
+							document.getElementById("textBox").appendChild(sp);
+							
+							sp.innerHTML += data[0].data + " -- [" + "<span class=\"spn\" style=\"color:" + data[0].exist + ";\">@" + data[0].user + "</span>] => " + data[0].msg;
+							$(sp).emoticonize();
+						}
+						
+		
+
+                    
+                },
+                complete: poll
+            }),
+            
+            sendData = {};
+        }
+        
+        
+        function upload() {
+            $.ajax({
+                method: "POST",
+                url: "ajaxup.php",
+                data: sendData,
+                dataType: "json",
+                success: function (data) {
+                    console.log("UPLOAD");
+                    console.log(data);
+                }
+            }),
+           
+            sendData = {};
+        }
+        
+        function focus(){
+            document.getElementById("send").focus();
+        }
+
+        
+        var msg;
+        var col = "red";
+        document.addEventListener("keydown", onKeyDown, false);
+        function onKeyDown(event) {
+            
+            var keyCode = event.which;
+            msg = document.getElementById('send').value;
+            if (keyCode == 13) {
+                if(msg != ""){
+                    
+                    var sp = document.createElement("div");
+                    sp.setAttribute("class", "oneLine");
+                    document.getElementById("textBox").appendChild(sp);
+                    
+                    sp.innerHTML += time + " -- [" + "<span class=\"spn\" style=\"color:" + accColor + ";\">@" + name + "</span>] => " + msg;
+					$(sp).emoticonize();
+
+                    sendData.setTime = time;
+                    sendData.user = name;
+                    sendData.setMsg = msg;
+                    sendData.setColor = accColor;
+                    sendData.clear = "yes";
+                    
+                    upload();
+                }
+            }
+
+        }
+
+    window.onload = poll();focus();
+        
+    </script>
+</body>
+</html>
